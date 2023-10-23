@@ -47,7 +47,7 @@ $envContents = Get-Content -Path ".env" -Raw
 $envObject = ConvertFrom-Yaml $envContents
 
 # # Access the values in the object
-Write-Host $envObject.testVariable
+Write-Host "Connected to $($envObject.PAGES_SITE_GUID) on $($envObject.ENVIRONMENT_URL)"
 
 
 
@@ -60,11 +60,11 @@ Write-Host $envObject.testVariable
 
 Write-Host "Initialization success!
 
-This program will perform all actions needed to set yourself up for new work with Power Pages. It will pull all updates and create two new branches from main, regardless of your current branch. Any changes you have will be stashed. You will do your work on the working branch ($branchNameWorking), then when you're done, PR against the original branch ($branchNameOriginal) for review. After review, your code will NOT be merged --PR is only for convenience in tracking diffs. Do not continue if corrections to the below need to be made, or if you're unsure about your local changes."
+Do not continue if corrections to the below need to be made, or if you're unsure about your local changes."
 
 Write-Host "`nPlease review the following information:
 
-- Current branch to be stashed: $currentBranch
+- Any changes on current branch to be stashed: $currentBranch
 - Working branch: $branchNameWorking
 - Original/target branch: $branchNameOriginal
 " -ForeGroundColor Blue
