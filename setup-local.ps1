@@ -3,9 +3,11 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$branchName,
   [string]$gitDirPrefix = ""
-  )
+)
   
 Write-Host "Initializing ..."
+
+
 
 
 
@@ -14,6 +16,8 @@ Write-Host "Initializing ..."
 $scriptPath = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
 Set-Location -Path $scriptPath
 
+$tempDirPath = ".\temp"
+New-Item -ItemType Directory -Path $tempDirPath
 
 
 # If no argument was provided for a prefix, use the username. If the username is empty,
@@ -31,6 +35,33 @@ if ([string]::IsNullOrEmpty($gitDirPrefix)) {
 }
 
 
+
+if (-not (Get-Module -ListAvailable PSYaml)) {
+  Write-Host "Module PSYaml not found in your current session. Installing ..."
+  Start-Process powershell.exe -Verb RunAs -ArgumentList "$scriptPath\install-psyaml.ps1"
+}
+
+
+Write-Host "finished"
+
+
+
+Import-Module PSYaml
+
+# # Read the contents of the .env file
+$envContents = Get-Content -Path ".env" -Raw
+
+# # Convert the YAML contents to a PowerShell object
+$envObject = ConvertFrom-Yaml $envContents
+
+# # Access the values in the object
+Write-Host $envObject.testVariable
+
+
+
+
+
+<#
 
 # Create two new branches from the branch that the script was called on. This will create
 # a new branch called "my-branch-name-original" and "my-branch-name-working".
@@ -57,3 +88,7 @@ Write-Host "Success!`nMake changes on your working branch, then in your pull req
 Write-Host "Branch base: $currentBranch" -ForegroundColor Green
 Write-Host "Branch name (working): $branchNameWorking" -ForegroundColor Green
 Write-Host "Branch name (original): $branchNameOriginal`n" -ForegroundColor Green
+
+#>
+
+Remove-Item -Path $tempDirPath -Recurse -Force
