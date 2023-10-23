@@ -100,7 +100,7 @@ pac paportal download -p $rootPath/TIMSSolution/PowerPages -id $envObject.PAGES_
 # a new branch called "my-branch-name-original" and "my-branch-name-working".
 # The original branch will be used in the pull requests as the comparison of changes. The 
 # user/developer should make all changes in the working branch.
-s
+
 Write-Host "Checking out and pulling updates from main ..."
 git reset HEAD --hard
 git checkout main
