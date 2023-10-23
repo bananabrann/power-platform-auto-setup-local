@@ -7,10 +7,6 @@ param(
   
 Write-Host "Initializing ..."
 
-
-
-
-
 # Get the directory path that the script is located in, then change directory to its
 # location.
 $scriptPath = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
@@ -42,10 +38,6 @@ if (-not (Get-Module -ListAvailable PSYaml)) {
 }
 
 
-Write-Host "finished"
-
-
-
 Import-Module PSYaml
 
 # # Read the contents of the .env file
@@ -60,16 +52,38 @@ Write-Host $envObject.testVariable
 
 
 
+# Confirm to the user of what they're about to do.
 
-<#
+[string]$branchNameWorking = "$gitDirPrefix/$branchName-working"
+[string]$branchNameOriginal = "$gitDirPrefix/$branchName-original"
+[string]$currentBranch = git branch --show-current
+
+Write-Host "Initialization success!
+
+This program will perform all actions needed to set yourself up for new work with Power Pages. It will pull all updates and create two new branches from main, regardless of your current branch. Any changes you have will be stashed. You will do your work on the working branch ($branchNameWorking), then when you're done, PR against the original branch ($branchNameOriginal) for review. After review, your code will NOT be merged --PR is only for convenience in tracking diffs. Do not continue if corrections to the below need to be made, or if you're unsure about your local changes."
+
+Write-Host "`nPlease review the following information:
+
+- Current branch to be stashed: $currentBranch
+- Working branch: $branchNameWorking
+- Original/target branch: $branchNameOriginal
+" -ForeGroundColor Blue
+
+$confirmation = Read-Host "Are you sure you want to continue? (Y/N)"
+if ($confirmation -ne "Y") {
+  Write-Host "Exiting ..."
+  Remove-Item -Path $tempDirPath -Recurse -Force
+  exit
+}
+
 
 # Create two new branches from the branch that the script was called on. This will create
 # a new branch called "my-branch-name-original" and "my-branch-name-working".
 # The original branch will be used in the pull requests as the comparison of changes. The 
 # user/developer should make all changes in the working branch.
-[string]$branchNameWorking = "$gitDirPrefix/$branchName-working"
-[string]$branchNameOriginal = "$gitDirPrefix/$branchName-original"
-[string]$currentBranch = git branch --show-current
+
+<#
+# Hidden for development because this is annoying to run over and over.
 
 Write-Host "Creating new branches from $currentBranch ..."
 
@@ -80,6 +94,7 @@ if ($LASTEXITCODE -ne 0) {
   Write-Host "Git commands failed. There is likely additional output above." -ForegroundColor Red
   exit
 }
+#>
 
 
 
@@ -89,6 +104,5 @@ Write-Host "Branch base: $currentBranch" -ForegroundColor Green
 Write-Host "Branch name (working): $branchNameWorking" -ForegroundColor Green
 Write-Host "Branch name (original): $branchNameOriginal`n" -ForegroundColor Green
 
-#>
 
 Remove-Item -Path $tempDirPath -Recurse -Force
