@@ -7,10 +7,11 @@ param(
   
 Write-Host "Initializing ..."
 
-# Get the directory path that the script is located in, then change directory to its
-# location.
+# Get the directory path that the script is located in, then change directory to of its
+# parent.
 $scriptPath = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
-Set-Location -Path $scriptPath
+$rootPath = "$scriptPath/../"
+Set-Location -Path $rootPath
 
 $tempDirPath = ".\temp"
 New-Item -ItemType Directory -Path $tempDirPath
@@ -27,16 +28,16 @@ if ([string]::IsNullOrEmpty($gitDirPrefix)) {
   }
 
   $gitDirPrefix = $env:USERNAME
-  Write-Host "A prefix override was not provided. I will use your username: $gitDirPrefix" -ForegroundColor Yellow
+  Write-Host "`nA prefix override was not provided. I will use your username: $gitDirPrefix`n" -ForegroundColor Yellow
 }
 
 
-
+# Check if the PSYaml PowerShell module is installed. If it doesn't, install it. User
+# will need to authorize admin mode.
 if (-not (Get-Module -ListAvailable PSYaml)) {
   Write-Host "Module PSYaml not found in your current session. Installing ..."
-  Start-Process powershell.exe -Verb RunAs -ArgumentList "$scriptPath\install-psyaml.ps1"
+  Start-Process powershell.exe -Wait -Verb RunAs -ArgumentList "$scriptPath\install-psyaml.ps1"
 }
-
 
 Import-Module PSYaml
 
@@ -64,9 +65,9 @@ Do not continue if corrections to the below need to be made, or if you're unsure
 
 Write-Host "`nPlease review the following information:
 
-- Any changes on current branch to be stashed: $currentBranch
-- Working branch: $branchNameWorking
-- Original/target branch: $branchNameOriginal
+- Changes to be stashed on branch name: $currentBranch
+- Branch name (working): $branchNameWorking
+- Branch name (original/target): $branchNameOriginal
 " -ForeGroundColor Blue
 
 $confirmation = Read-Host "Are you sure you want to continue? (Y/N)"
@@ -77,13 +78,38 @@ if ($confirmation -ne "Y") {
 }
 
 
+# Stash local changes.
+Write-Host "Stashing your local changes ..."
+git stash --all --quiet
+
+
+# Log the user in.
+# TODO - Detect if the user is already logged in. If they are, skip the login process.
+# Run 'pac auth' for more information.
+# NOTE - Duplicate login profiles are not made. pac auth is smart enough to overrite the
+# last token.
+Write-Host "Do not close/exit this process while logging in. Logging in ..."
+pac auth create -u $envObject.ENVIRONMENT_URL
+
+# Download the Power Pages site to local.
+Write-Host "Pulling changes from Power Pages ..."
+pac paportal download -p $rootPath/TIMSSolution/PowerPages -id $envObject.PAGES_SITE_GUID
+
+
 # Create two new branches from the branch that the script was called on. This will create
 # a new branch called "my-branch-name-original" and "my-branch-name-working".
 # The original branch will be used in the pull requests as the comparison of changes. The 
 # user/developer should make all changes in the working branch.
+s
+Write-Host "Checking out and pulling updates from main ..."
+git reset HEAD --hard
+git checkout main
+git fetch
+git pull -u origin main
 
-<#
-# Hidden for development because this is annoying to run over and over.
+if ($LASTEXITCODE -ne 0) {
+  exit
+}
 
 Write-Host "Creating new branches from $currentBranch ..."
 
@@ -91,10 +117,8 @@ git branch $branchNameOriginal -q
 git checkout -b $branchNameWorking -q
 
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "Git commands failed. There is likely additional output above." -ForegroundColor Red
   exit
 }
-#>
 
 
 
