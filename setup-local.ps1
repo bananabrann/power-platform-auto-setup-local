@@ -83,6 +83,16 @@ Write-Host "Stashing your local changes ..."
 git stash --all --quiet
 
 
+Write-Host "Checking out and pulling updates from main ..."
+git reset HEAD --hard
+git checkout main
+git fetch
+git pull
+
+if ($LASTEXITCODE -ne 0) {
+  exit
+}
+
 # Log the user in.
 # TODO - Detect if the user is already logged in. If they are, skip the login process.
 # Run 'pac auth' for more information.
@@ -101,20 +111,14 @@ pac paportal download -p $rootPath/TIMSSolution/PowerPages -id $envObject.PAGES_
 # The original branch will be used in the pull requests as the comparison of changes. The 
 # user/developer should make all changes in the working branch.
 
-Write-Host "Checking out and pulling updates from main ..."
-git reset HEAD --hard
-git checkout main
-git fetch
-git pull -u origin main
-
-if ($LASTEXITCODE -ne 0) {
-  exit
-}
-
 Write-Host "Creating new branches from $currentBranch ..."
 
-git branch $branchNameOriginal -q
+git add --all
+git commit -m "Auto script: pac pull and pac paportal download"
+git checkout -b $branchNameOriginal -q
+git push -u origin $branchNameOriginal -q
 git checkout -b $branchNameWorking -q
+git push -u origin $branchNameWorking -q
 
 if ($LASTEXITCODE -ne 0) {
   exit
