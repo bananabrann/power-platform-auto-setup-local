@@ -80,7 +80,7 @@ if ($confirmation -ne "Y") {
 
 # Stash local changes.
 Write-Host "Stashing your local changes ..."
-git stash --all --quiet
+git stash --include-untracked --quiet
 
 
 Write-Host "Checking out and pulling updates from main ..."
